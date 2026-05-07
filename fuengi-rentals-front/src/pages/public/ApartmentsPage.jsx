@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 
-import { ApartmentCard } from "../../components";
+import errorImage from "../../assets/images/error.png";
+import { ApartmentCard, StateMsg } from "../../components";
 import { getApartments } from "../../services";
 
 function ApartmentsPage() {
@@ -24,38 +25,36 @@ function ApartmentsPage() {
     fetchApartments();
   }, []);
 
-  if (loading) {
-    return <p className="page-feedback">Cargando apartamentos...</p>;
-  }
-
-  if (error) {
-    return <p className="page-feedback page-feedback-error">{error}</p>;
-  }
-
   return (
-    <section className="page-stack">
-      <div className="page-heading">
-        <p className="page-eyebrow">Catalogo</p>
-        <h1>Apartamentos disponibles</h1>
-        <p className="page-lead">
-          Una vista clara para comparar opciones antes de entrar al detalle y
-          revisar la disponibilidad real.
+    <>
+      <div className="page-head container">
+        <h1>Apartamentos en Fuengirola</h1>
+        <p>
+          Elige la vivienda que encaje con tu viaje, revisa fotos y comprueba
+          disponibilidad antes de enviar tu solicitud.
         </p>
       </div>
 
-      {apartments.length === 0 ? (
-        <div className="empty-card">
-          <h2>No hay apartamentos publicados</h2>
-          <p>Cuando el admin cree apartamentos apareceran aqui.</p>
-        </div>
-      ) : (
-        <div className="apartment-grid">
-          {apartments.map((apartment) => (
-            <ApartmentCard key={apartment._id} apartment={apartment} />
-          ))}
-        </div>
-      )}
-    </section>
+      <div className="container section-tight">
+        {loading ? (
+          <StateMsg kind="loading" title="Cargando apartamentos" />
+        ) : error ? (
+          <StateMsg kind="error" title={error} imageSrc={errorImage} imageAlt="" />
+        ) : apartments.length === 0 ? (
+          <StateMsg
+            kind="empty"
+            title="No hay apartamentos publicados"
+            desc="Cuando el admin cree apartamentos apareceran aqui."
+          />
+        ) : (
+          <div className="preview-grid">
+            {apartments.map((apartment) => (
+              <ApartmentCard key={apartment._id} apartment={apartment} />
+            ))}
+          </div>
+        )}
+      </div>
+    </>
   );
 }
 

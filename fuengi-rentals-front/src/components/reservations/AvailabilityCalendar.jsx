@@ -1,81 +1,100 @@
 import { useMemo, useState } from "react";
 
+import { toIsoDate, todayIso } from "../../utils";
+
 const weekdayLabels = ["L", "M", "X", "J", "V", "S", "D"];
 const monthFormatter = new Intl.DateTimeFormat("es-ES", {
   month: "long",
   year: "numeric",
 });
 
-const startOfDay = (date) => new Date(date.getFullYear(), date.getMonth(), date.getDate());
-
-const parseRangeDate = (value) => {
-  const date = new Date(value);
-  return startOfDay(date);
-};
-
 const addMonths = (date, amount) => new Date(date.getFullYear(), date.getMonth() + amount, 1);
 
-const getMonthDays = (visibleMonth) => {
+const getMonthCells = (visibleMonth) => {
   const firstDay = new Date(visibleMonth.getFullYear(), visibleMonth.getMonth(), 1);
   const lastDay = new Date(visibleMonth.getFullYear(), visibleMonth.getMonth() + 1, 0);
   const leadingEmptyDays = (firstDay.getDay() + 6) % 7;
-  const days = Array.from({ length: leadingEmptyDays }, () => null);
+  const cells = Array.from({ length: leadingEmptyDays }, () => null);
 
   for (let day = 1; day <= lastDay.getDate(); day += 1) {
-    days.push(new Date(visibleMonth.getFullYear(), visibleMonth.getMonth(), day));
+    const date = new Date(visibleMonth.getFullYear(), visibleMonth.getMonth(), day);
+    cells.push(toIsoDate(date));
   }
 
-  return days;
+  while (cells.length % 7) {
+    cells.push(null);
+  }
+
+  return cells;
 };
 
-const getSourceLabel = (range) => {
+const getRangeKind = (range) => {
   if (range.source === "booking_calendar") {
-    return "Booking";
+    return "booking";
   }
 
   if (range.source === "block") {
-    return "Bloqueo";
+    return "block";
   }
 
-  return "Reserva";
+  return "web";
 };
 
-function AvailabilityCalendar({ unavailableRanges }) {
+function AvailabilityCalendar({ unavailableRanges = [], range = {}, onDateSelect }) {
   const [visibleMonth, setVisibleMonth] = useState(() => {
     const today = new Date();
     return new Date(today.getFullYear(), today.getMonth(), 1);
   });
 
+  const today = todayIso();
+
   const normalizedRanges = useMemo(
     () =>
-      unavailableRanges.map((range) => ({
-        ...range,
-        startDate: parseRangeDate(range.startDate),
-        endDate: parseRangeDate(range.endDate),
+      unavailableRanges.map((item) => ({
+        ...item,
+        startDate: toIsoDate(item.startDate),
+        endDate: toIsoDate(item.endDate),
+        kind: getRangeKind(item),
       })),
     [unavailableRanges]
   );
 
-  const days = useMemo(() => getMonthDays(visibleMonth), [visibleMonth]);
+  const cells = useMemo(() => getMonthCells(visibleMonth), [visibleMonth]);
 
-  const getRangeForDay = (day) =>
-    normalizedRanges.find((range) => day >= range.startDate && day < range.endDate);
+  const getDayInfo = (iso) => {
+    if (iso < today) {
+      return { kind: "past", disabled: true, title: "Fecha pasada" };
+    }
+
+    const occupiedRange = normalizedRanges.find(
+      (item) => iso >= item.startDate && iso < item.endDate
+    );
+
+    if (occupiedRange) {
+      return {
+        kind: occupiedRange.kind,
+        disabled: true,
+        title: occupiedRange.sourceName || "Ocupado",
+      };
+    }
+
+    return { kind: "free", disabled: false, title: "Disponible" };
+  };
 
   return (
-    <div className="availability-calendar">
-      <div className="availability-calendar-header">
+    <div className="calendar">
+      <div className="cal-nav">
         <button
           type="button"
-          className="calendar-nav-button"
+          className="btn-icon"
           onClick={() => setVisibleMonth((currentMonth) => addMonths(currentMonth, -1))}
           aria-label="Mes anterior"
         >
           {"<"}
         </button>
-        <h3>{monthFormatter.format(visibleMonth)}</h3>
         <button
           type="button"
-          className="calendar-nav-button"
+          className="btn-icon"
           onClick={() => setVisibleMonth((currentMonth) => addMonths(currentMonth, 1))}
           aria-label="Mes siguiente"
         >
@@ -83,34 +102,51 @@ function AvailabilityCalendar({ unavailableRanges }) {
         </button>
       </div>
 
-      <div className="availability-calendar-grid availability-calendar-weekdays">
-        {weekdayLabels.map((label) => (
-          <span key={label}>{label}</span>
-        ))}
-      </div>
-
-      <div className="availability-calendar-grid">
-        {days.map((day, index) => {
-          if (!day) {
-            return <span key={`empty-${index}`} className="availability-calendar-empty" />;
-          }
-
-          const matchingRange = getRangeForDay(day);
-
-          return (
-            <span
-              key={day.toISOString()}
-              className={
-                matchingRange
-                  ? "availability-calendar-day availability-calendar-day-busy"
-                  : "availability-calendar-day"
+      <div className="cal-months">
+        <div className="cal-month">
+          <div className="cal-month-title">{monthFormatter.format(visibleMonth)}</div>
+          <div className="cal-weekdays">
+            {weekdayLabels.map((label) => (
+              <span key={label}>{label}</span>
+            ))}
+          </div>
+          <div className="cal-grid">
+            {cells.map((iso, index) => {
+              if (!iso) {
+                return <span key={`empty-${index}`} className="cal-cell empty" />;
               }
-              title={matchingRange ? getSourceLabel(matchingRange) : "Disponible"}
-            >
-              {day.getDate()}
-            </span>
-          );
-        })}
+
+              const dayInfo = getDayInfo(iso);
+              const isStart = range.startDate === iso;
+              const isEnd = range.endDate === iso;
+              const inRange = range.startDate && range.endDate && iso > range.startDate && iso < range.endDate;
+              const isToday = iso === today;
+              const className = [
+                "cal-cell",
+                `kind-${dayInfo.kind}`,
+                isStart ? "range-start" : "",
+                isEnd ? "range-end" : "",
+                inRange ? "in-range" : "",
+                isToday ? "today" : "",
+              ]
+                .filter(Boolean)
+                .join(" ");
+
+              return (
+                <button
+                  type="button"
+                  key={iso}
+                  className={className}
+                  disabled={dayInfo.disabled}
+                  title={dayInfo.title}
+                  onClick={() => onDateSelect?.(iso)}
+                >
+                  <span className="cal-num">{Number(iso.slice(8, 10))}</span>
+                </button>
+              );
+            })}
+          </div>
+        </div>
       </div>
     </div>
   );

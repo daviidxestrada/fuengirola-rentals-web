@@ -1,8 +1,10 @@
 import { useContext, useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 
+import { Field } from "../../components";
 import { AuthContext } from "../../context";
 import { loginUser, registerUser } from "../../services";
+import { AUTH_IMAGE } from "../../utils";
 
 function RegisterPage() {
   const { login } = useContext(AuthContext);
@@ -33,6 +35,11 @@ function RegisterPage() {
       return;
     }
 
+    if (form.password.length < 6) {
+      setError("El password debe tener al menos 6 caracteres.");
+      return;
+    }
+
     try {
       setLoading(true);
       await registerUser({
@@ -57,59 +64,58 @@ function RegisterPage() {
   };
 
   return (
-    <section className="login-shell">
-      <article className="login-card">
-        <div className="login-copy">
-          <p className="page-eyebrow">Crear cuenta</p>
-          <h1>Registro de usuario</h1>
-          <p className="page-lead">
-            Crea una cuenta para poder reservar desde la web y consultar tus
-            reservas en tu panel personal.
-          </p>
-        </div>
+    <div className="auth-page">
+      <div className="auth-form-side">
+        <div className="auth-form-inner">
+          <span className="section-kicker">Crear cuenta</span>
+          <h1>Registro</h1>
+          <p>Crea una cuenta para enviar solicitudes y consultar el estado de tus reservas.</p>
 
-        <form className="login-form" onSubmit={handleSubmit}>
-          <label className="booking-field">
-            <span>Nombre</span>
-            <input
-              type="text"
+          <form className="auth-form-fields" onSubmit={handleSubmit}>
+            <Field
+              label="Nombre"
               name="name"
-              placeholder="Tu nombre"
               value={form.name}
               onChange={handleChange}
+              placeholder="Tu nombre"
+              autoComplete="name"
             />
-          </label>
-
-          <label className="booking-field">
-            <span>Email</span>
-            <input
+            <Field
+              label="Email"
               type="email"
               name="email"
-              placeholder="usuario@demo.com"
               value={form.email}
               onChange={handleChange}
+              placeholder="usuario@demo.com"
+              autoComplete="email"
             />
-          </label>
-
-          <label className="booking-field">
-            <span>Password</span>
-            <input
+            <Field
+              label="Password"
               type="password"
               name="password"
-              placeholder="Tu contraseña"
               value={form.password}
               onChange={handleChange}
+              placeholder="********"
+              autoComplete="new-password"
+              error={error}
             />
-          </label>
+            <button type="submit" className="btn btn-primary btn-block btn-lg" disabled={loading}>
+              {loading ? "Creando cuenta..." : "Crear cuenta"}
+            </button>
+          </form>
 
-          {error && <div className="page-feedback page-feedback-error">{error}</div>}
-
-          <button type="submit" className="site-cta site-cta-primary booking-submit" disabled={loading}>
-            {loading ? "Creando cuenta..." : "Crear cuenta"}
-          </button>
-        </form>
-      </article>
-    </section>
+          <p className="auth-foot">
+            Ya tienes cuenta? <Link to="/login">Entrar</Link>
+          </p>
+        </div>
+      </div>
+      <div className="auth-img-side" style={{ backgroundImage: `url(${AUTH_IMAGE})` }}>
+        <div className="auth-quote">
+          <span className="auth-quote-mark">"</span>
+          Tu viaje a Fuengirola empieza con una solicitud sencilla.
+        </div>
+      </div>
+    </div>
   );
 }
 

@@ -1,40 +1,27 @@
 import { Link } from "react-router-dom";
 
+import { getApartmentImages } from "../../utils";
+
 function ApartmentCard({ apartment }) {
-  const coverImage = apartment.images?.[0];
-  const coverStyle = coverImage ? { backgroundImage: `url(${coverImage})` } : undefined;
+  const coverImage = getApartmentImages(apartment)[0];
 
   return (
-    <article className="apartment-card">
-      <div
-        className={`apartment-card-media${coverImage ? " apartment-card-media-cover" : ""}`}
-        style={coverStyle}
-        role={coverImage ? "img" : undefined}
-        aria-label={coverImage ? apartment.title : undefined}
-      >
-        {coverImage ? (
-          <span className="sr-only">{apartment.title}</span>
-        ) : (
-          <div className="apartment-cover-placeholder">
-            <span>{apartment.city}</span>
+    <Link to={`/apartments/${apartment._id}`} className="apt-card">
+      <div className="apt-card-img" style={{ backgroundImage: `url(${coverImage})` }}>
+        <span className="apt-card-img-tag">{apartment.city || "Fuengirola"}</span>
+      </div>
+
+      <div className="apt-card-body">
+        <h3 className="apt-card-title">{apartment.title}</h3>
+        <p className="apt-card-desc">{apartment.description}</p>
+        <div className="apt-card-foot">
+          <div className="apt-card-price">
+            {apartment.price} EUR<small>/ noche</small>
           </div>
-        )}
-      </div>
-
-      <div className="apartment-card-body">
-        <div className="apartment-card-top">
-          <p className="page-eyebrow">{apartment.city}</p>
-          <span className="price-pill">{apartment.price} EUR / noche</span>
+          <span className="apt-card-cta">Ver detalle</span>
         </div>
-
-        <h2>{apartment.title}</h2>
-        <p className="apartment-card-text">{apartment.description}</p>
-
-        <Link to={`/apartments/${apartment._id}`} className="site-cta site-cta-secondary">
-          Ver detalle
-        </Link>
       </div>
-    </article>
+    </Link>
   );
 }
 

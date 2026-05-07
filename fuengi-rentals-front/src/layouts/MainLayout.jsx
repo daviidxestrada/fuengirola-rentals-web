@@ -1,91 +1,121 @@
-import { useContext, useState } from "react";
-import { Link, NavLink, Outlet } from "react-router-dom";
+import { useContext, useEffect, useState } from "react";
+import { Link, NavLink, Outlet, useLocation } from "react-router-dom";
 
-import menuIcon from "../assets/images/iconmenu.svg";
+import { Logo } from "../components";
 import { AuthContext } from "../context";
 
 function MainLayout() {
   const { user, authReady } = useContext(AuthContext);
+  const location = useLocation();
   const isAdmin = user?.role === "admin";
+  const isHome = location.pathname === "/";
   const [menuOpen, setMenuOpen] = useState(false);
+  const [scrolled, setScrolled] = useState(false);
 
-  // Cierra el panel movil al navegar por la app.
   const closeMenu = () => setMenuOpen(false);
+
+  useEffect(() => {
+    const handleScroll = () => setScrolled(window.scrollY > 12);
+    handleScroll();
+    window.addEventListener("scroll", handleScroll);
+
+    return () => window.removeEventListener("scroll", handleScroll);
+  }, []);
+
+  const headerClassName = [
+    "site-header",
+    isHome ? "transparent" : "",
+    scrolled ? "scrolled" : "",
+  ]
+    .filter(Boolean)
+    .join(" ");
 
   return (
     <div className="site-shell">
-      <header className="site-header">
-        <div className="site-header-inner">
-          <Link to="/" className="site-brand" onClick={closeMenu}>
-            <strong>
-              <span>Direct </span>
-              <br className="site-brand-break" />
-              <span>Booking</span>
-            </strong>
+      <header className={headerClassName}>
+        <div className="container header-inner">
+          <Link to="/" className="logo-btn" onClick={closeMenu} aria-label="Inicio">
+            <Logo inverted={isHome && !scrolled} />
           </Link>
 
-          <button
-            type="button"
-            className="site-menu-toggle"
-            aria-expanded={menuOpen}
-            aria-controls="site-menu-panel"
-            // El mismo boton abre y cierra el menu responsive.
-            onClick={() => setMenuOpen((currentValue) => !currentValue)}
-          >
-            <img src={menuIcon} alt="" aria-hidden="true" className="site-menu-toggle-icon" />
-            <span>{menuOpen ? "Cerrar" : "Menu"}</span>
-          </button>
-
-          <div
-            id="site-menu-panel"
-            className={`site-menu-panel${menuOpen ? " site-menu-panel-open" : ""}`}
-          >
-            <nav className="site-nav">
+          <nav className="header-nav">
+            <NavLink to="/" end className={({ isActive }) => (isActive ? "nav-link active" : "nav-link")}>
+              Inicio
+            </NavLink>
+            <NavLink
+              to="/apartments"
+              className={({ isActive }) => (isActive ? "nav-link active" : "nav-link")}
+            >
+              Apartamentos
+            </NavLink>
+            {isAdmin ? (
               <NavLink
-                to="/"
-                end
-                onClick={closeMenu}
-                className={({ isActive }) =>
-                  isActive ? "site-nav-link site-nav-link-active" : "site-nav-link"
-                }
+                to="/admin"
+                className={({ isActive }) => (isActive ? "nav-link active" : "nav-link")}
               >
-                Inicio
+                Admin
               </NavLink>
-              <NavLink
-                to="/apartments"
-                onClick={closeMenu}
-                className={({ isActive }) =>
-                  isActive ? "site-nav-link site-nav-link-active" : "site-nav-link"
-                }
-              >
-                Apartamentos
-              </NavLink>
-            </nav>
+            ) : null}
+          </nav>
 
-            <div className="site-actions">
-              {!authReady ? (
-                <span className="site-status-pill">Comprobando sesion</span>
-              ) : user ? (
-                <Link
-                  to={isAdmin ? "/admin" : "/account"}
-                  className="site-cta site-cta-primary"
-                  onClick={closeMenu}
-                >
-                  {isAdmin ? "Ir al panel admin" : "Mi panel"}
+          <div className="header-right">
+            {!authReady ? (
+              <span className="header-status">Comprobando sesion</span>
+            ) : user ? (
+              <Link to={isAdmin ? "/admin" : "/account"} className="btn btn-ghost btn-sm">
+                {isAdmin ? "Panel admin" : "Mi cuenta"}
+              </Link>
+            ) : (
+              <>
+                <Link to="/register" className="btn btn-secondary btn-sm">
+                  Crear cuenta
                 </Link>
-              ) : (
-                <>
-                  <Link to="/register" className="site-cta site-cta-secondary" onClick={closeMenu}>
-                    Crear cuenta
-                  </Link>
-                  <Link to="/login" className="site-cta site-cta-primary" onClick={closeMenu}>
-                    Login
-                  </Link>
-                </>
-              )}
-            </div>
+                <Link to="/login" className="btn btn-ghost btn-sm">
+                  Login
+                </Link>
+              </>
+            )}
+
+            <button
+              type="button"
+              className="btn-icon header-burger"
+              aria-expanded={menuOpen}
+              aria-label="Menu"
+              onClick={() => setMenuOpen((currentValue) => !currentValue)}
+            >
+              <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" strokeWidth="1.8">
+                <path d="M4 7h16" />
+                <path d="M4 12h16" />
+                <path d="M4 17h16" />
+              </svg>
+            </button>
           </div>
         </div>
+
+        {menuOpen ? (
+          <div className="mobile-menu">
+            <Link to="/" onClick={closeMenu}>
+              Inicio
+            </Link>
+            <Link to="/apartments" onClick={closeMenu}>
+              Apartamentos
+            </Link>
+            {user ? (
+              <Link to={isAdmin ? "/admin" : "/account"} onClick={closeMenu}>
+                {isAdmin ? "Panel admin" : "Mi cuenta"}
+              </Link>
+            ) : (
+              <>
+                <Link to="/register" onClick={closeMenu}>
+                  Crear cuenta
+                </Link>
+                <Link to="/login" onClick={closeMenu}>
+                  Login
+                </Link>
+              </>
+            )}
+          </div>
+        ) : null}
       </header>
 
       <main className="site-main">
@@ -93,9 +123,34 @@ function MainLayout() {
       </main>
 
       <footer className="site-footer">
-        <div className="site-footer-inner">
-          <p>Direct Booking · Reservas directas para apartamentos turisticos</p>
-          <p>Proyecto Full Stack con React, Express y MongoDB</p>
+        <div className="container footer-inner">
+          <div className="footer-brand">
+            <Logo inverted />
+            <p className="footer-tag">
+              Apartamentos turisticos en Fuengirola con reserva directa y gestion familiar.
+            </p>
+          </div>
+          <div className="footer-cols">
+            <div>
+              <h5>Reservas</h5>
+              <Link to="/apartments">Apartamentos</Link>
+              <Link to="/account">Mis reservas</Link>
+            </div>
+            <div>
+              <h5>Contacto</h5>
+              <a href="mailto:hola@fuengirolarentals.es">hola@fuengirolarentals.es</a>
+              <a href="tel:+34952000000">+34 952 00 00 00</a>
+            </div>
+            <div>
+              <h5>Zona</h5>
+              <span>Fuengirola</span>
+              <span>Costa del Sol</span>
+            </div>
+          </div>
+        </div>
+        <div className="container footer-bottom">
+          <span>2026 Fuengirola Rentals</span>
+          <span>Reserva directa para estancias en la Costa del Sol</span>
         </div>
       </footer>
     </div>

@@ -24,6 +24,12 @@ const apartmentSchema = new mongoose.Schema(
         type: String,
       },
     ],
+    features: [
+      {
+        type: String,
+        trim: true,
+      },
+    ],
     bookingCalendarUrl: {
       type: String,
       trim: true,

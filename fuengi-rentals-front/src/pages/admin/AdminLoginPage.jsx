@@ -1,8 +1,10 @@
 import { useContext, useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 
+import { Field } from "../../components";
 import { AuthContext } from "../../context";
 import { loginUser } from "../../services";
+import { AUTH_IMAGE } from "../../utils";
 
 function AdminLoginPage() {
   const { login } = useContext(AuthContext);
@@ -31,46 +33,50 @@ function AdminLoginPage() {
   };
 
   return (
-    <section className="login-shell">
-      <article className="login-card">
-        <div className="login-copy">
-          <p className="page-eyebrow">Acceso</p>
+    <div className="auth-page">
+      <div className="auth-form-side">
+        <div className="auth-form-inner">
+          <span className="section-kicker">Acceso</span>
           <h1>Login</h1>
-          <p className="page-lead">
-            Entra con tu cuenta para reservar apartamentos, consultar tus
-            reservas o acceder al panel.
+          <p>
+            Entra con tu cuenta para solicitar reservas, revisar tu panel o administrar la web.
           </p>
-        </div>
 
-        <form className="login-form" onSubmit={handleSubmit}>
-          <label className="booking-field">
-            <span>Email</span>
-            <input
+          <form className="auth-form-fields" onSubmit={handleSubmit}>
+            <Field
+              label="Email"
               type="email"
-              placeholder="user@email.com"
               value={email}
               onChange={(event) => setEmail(event.target.value)}
+              placeholder="user@email.com"
+              autoComplete="email"
             />
-          </label>
-
-          <label className="booking-field">
-            <span>Password</span>
-            <input
+            <Field
+              label="Password"
               type="password"
-              placeholder="Tu contraseña"
               value={password}
               onChange={(event) => setPassword(event.target.value)}
+              placeholder="********"
+              autoComplete="current-password"
+              error={error}
             />
-          </label>
+            <button type="submit" className="btn btn-primary btn-block btn-lg" disabled={loading}>
+              {loading ? "Accediendo..." : "Entrar"}
+            </button>
+          </form>
 
-          {error && <div className="page-feedback page-feedback-error">{error}</div>}
-
-          <button type="submit" className="site-cta site-cta-primary booking-submit" disabled={loading}>
-            {loading ? "Accediendo..." : "Entrar"}
-          </button>
-        </form>
-      </article>
-    </section>
+          <p className="auth-foot">
+            No tienes cuenta? <Link to="/register">Crear cuenta</Link>
+          </p>
+        </div>
+      </div>
+      <div className="auth-img-side" style={{ backgroundImage: `url(${AUTH_IMAGE})` }}>
+        <div className="auth-quote">
+          <span className="auth-quote-mark">"</span>
+          Despertar cerca del Mediterraneo, sin complicaciones.
+        </div>
+      </div>
+    </div>
   );
 }
 

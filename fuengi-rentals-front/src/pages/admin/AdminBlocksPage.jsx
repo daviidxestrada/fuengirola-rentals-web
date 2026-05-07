@@ -1,6 +1,8 @@
 import { useEffect, useState } from "react";
 
+import { Field, StateMsg } from "../../components";
 import { createBlock, deleteBlock, getApartments, getBlocks } from "../../services";
+import { formatDateShort, getApartmentImages } from "../../utils";
 
 const initialForm = {
   apartment: "",
@@ -8,13 +10,6 @@ const initialForm = {
   endDate: "",
   note: "",
 };
-
-const formatDate = (value) =>
-  new Date(value).toLocaleDateString("es-ES", {
-    day: "2-digit",
-    month: "2-digit",
-    year: "numeric",
-  });
 
 function AdminBlocksPage() {
   const [apartments, setApartments] = useState([]);
@@ -29,10 +24,7 @@ function AdminBlocksPage() {
   const loadData = async () => {
     try {
       setLoading(true);
-      const [apartmentsData, blocksData] = await Promise.all([
-        getApartments(),
-        getBlocks(),
-      ]);
+      const [apartmentsData, blocksData] = await Promise.all([getApartments(), getBlocks()]);
 
       setApartments(apartmentsData);
       setBlocks(blocksData);
@@ -40,8 +32,8 @@ function AdminBlocksPage() {
         ...currentForm,
         apartment: currentForm.apartment || apartmentsData[0]?._id || "",
       }));
-    } catch (err) {
-      console.error(err);
+    } catch (requestError) {
+      console.error(requestError);
       setError("No se pudieron cargar los bloqueos del panel.");
     } finally {
       setLoading(false);
@@ -90,18 +82,16 @@ function AdminBlocksPage() {
         apartment: currentForm.apartment,
       }));
       setMessage("Bloqueo manual creado correctamente.");
-    } catch (err) {
-      console.error(err);
-      setError(err.response?.data?.message || "No se pudo crear el bloqueo.");
+    } catch (requestError) {
+      console.error(requestError);
+      setError(requestError.response?.data?.message || "No se pudo crear el bloqueo.");
     } finally {
       setSaving(false);
     }
   };
 
   const handleDelete = async (blockId) => {
-    const confirmed = window.confirm(
-      "Se eliminara el bloqueo manual seleccionado. ¿Quieres continuar?"
-    );
+    const confirmed = window.confirm("Se eliminara el bloqueo manual seleccionado. Quieres continuar?");
 
     if (!confirmed) {
       return;
@@ -114,145 +104,118 @@ function AdminBlocksPage() {
       await deleteBlock(blockId);
       setBlocks((currentBlocks) => currentBlocks.filter((block) => block._id !== blockId));
       setMessage("Bloqueo eliminado correctamente.");
-    } catch (err) {
-      console.error(err);
-      setError(err.response?.data?.message || "No se pudo eliminar el bloqueo.");
+    } catch (requestError) {
+      console.error(requestError);
+      setError(requestError.response?.data?.message || "No se pudo eliminar el bloqueo.");
     } finally {
       setDeletingId(null);
     }
   };
 
   return (
-    <section className="admin-page">
-      <div className="admin-page-header">
-        <p className="admin-eyebrow">Modulo</p>
-        <h2>Bloqueo manual de fechas</h2>
-        <p>
-          Crea cierres manuales por rango para impedir reservas en periodos de
-          mantenimiento, uso propio u otros motivos.
-        </p>
+    <>
+      <div className="admin-head">
+        <div>
+          <h1>Bloqueo manual de fechas</h1>
+          <p>Cierra rangos por mantenimiento, uso propietario, limpieza o cualquier motivo interno.</p>
+        </div>
       </div>
 
+      {(error || message) ? (
+        <div className={error ? "admin-feedback admin-error" : "admin-feedback admin-success"}>
+          {error || message}
+        </div>
+      ) : null}
+
       <div className="admin-apartments-layout">
-        <section className="admin-form-card">
-          <div className="admin-form-header">
-            <h3>Nuevo bloqueo</h3>
-            <p>Los bloqueos tambien afectan a la disponibilidad publica.</p>
+        <section className="admin-section admin-form-card">
+          <div className="admin-section-head">
+            <div>
+              <h2>Nuevo bloqueo</h2>
+              <p>Estos bloqueos tambien afectan al calendario publico.</p>
+            </div>
           </div>
 
           <form className="admin-form" onSubmit={handleSubmit}>
-            <label className="admin-field">
-              <span>Apartamento</span>
-              <select name="apartment" value={form.apartment} onChange={handleChange}>
-                <option value="">Selecciona un apartamento</option>
-                {apartments.map((apartment) => (
-                  <option key={apartment._id} value={apartment._id}>
-                    {apartment.title} - {apartment.city}
-                  </option>
-                ))}
-              </select>
-            </label>
-
-            <label className="admin-field">
-              <span>Fecha inicio</span>
-              <input
-                type="date"
-                name="startDate"
-                value={form.startDate}
-                onChange={handleChange}
-              />
-            </label>
-
-            <label className="admin-field">
-              <span>Fecha fin</span>
-              <input
-                type="date"
-                name="endDate"
-                value={form.endDate}
-                onChange={handleChange}
-              />
-            </label>
-
-            <label className="admin-field">
-              <span>Nota</span>
-              <textarea
-                name="note"
-                rows="4"
-                value={form.note}
-                onChange={handleChange}
-                placeholder="Mantenimiento, uso propietario, limpieza profunda..."
-              />
-            </label>
-
-            {(error || message) && (
-              <div className={error ? "admin-feedback admin-error" : "admin-feedback admin-success"}>
-                {error || message}
-              </div>
-            )}
-
-            <div className="admin-form-actions">
-              <button type="submit" className="admin-primary-button" disabled={saving}>
-                {saving ? "Guardando..." : "Crear bloqueo"}
-              </button>
+            <Field label="Apartamento" name="apartment" as="select" value={form.apartment} onChange={handleChange}>
+              <option value="">Selecciona un apartamento</option>
+              {apartments.map((apartment) => (
+                <option key={apartment._id} value={apartment._id}>
+                  {apartment.title} - {apartment.city}
+                </option>
+              ))}
+            </Field>
+            <div className="field-row">
+              <Field label="Fecha inicio" type="date" name="startDate" value={form.startDate} onChange={handleChange} />
+              <Field label="Fecha fin" type="date" name="endDate" value={form.endDate} onChange={handleChange} />
             </div>
+            <Field
+              label="Nota"
+              name="note"
+              as="textarea"
+              rows={4}
+              value={form.note}
+              onChange={handleChange}
+              placeholder="Mantenimiento, uso propietario, limpieza profunda..."
+            />
+            <button type="submit" className="btn btn-primary btn-block" disabled={saving}>
+              {saving ? "Guardando..." : "Crear bloqueo"}
+            </button>
           </form>
         </section>
 
-        <section className="admin-list-card">
-          <div className="admin-form-header">
-            <h3>Bloqueos activos</h3>
-            <p>
-              {loading
-                ? "Cargando bloqueos..."
-                : `${blocks.length} bloqueos manuales en el panel.`}
-            </p>
+        <section className="admin-section admin-list-card">
+          <div className="admin-section-head">
+            <div>
+              <h2>Bloqueos activos</h2>
+              <p>{loading ? "Cargando bloqueos..." : `${blocks.length} bloqueos manuales en el panel.`}</p>
+            </div>
           </div>
 
           {loading ? (
-            <p>Cargando bloqueos...</p>
+            <StateMsg kind="loading" title="Cargando bloqueos" />
           ) : blocks.length === 0 ? (
-            <p>No hay bloqueos manuales creados todavia.</p>
+            <StateMsg kind="empty" title="No hay bloqueos manuales" />
           ) : (
             <div className="admin-reservation-list">
-              {blocks.map((block) => (
-                <article key={block._id} className="admin-reservation-item">
-                  <div className="admin-reservation-summary">
-                    <div className="admin-reservation-top">
-                      <h3>{block.apartment?.title || "Apartamento no disponible"}</h3>
-                      <span className="admin-reservation-price">Bloqueo manual</span>
+              {blocks.map((block) => {
+                const image = getApartmentImages(block.apartment)[0];
+
+                return (
+                  <article key={block._id} className="admin-reservation-item">
+                    <div className="admin-reservation-media" style={{ backgroundImage: `url(${image})` }} />
+                    <div className="admin-reservation-summary">
+                      <div className="admin-reservation-top">
+                        <div>
+                          <h3>{block.apartment?.title || "Apartamento no disponible"}</h3>
+                          <p>{block.apartment?.city || "No disponible"}</p>
+                        </div>
+                        <span className="status-badge status-pending">Bloqueo</span>
+                      </div>
+                      <div className="reservation-meta-grid">
+                        <span>Inicio: {formatDateShort(block.startDate)}</span>
+                        <span>Fin: {formatDateShort(block.endDate)}</span>
+                        <span>Nota: {block.note || "Sin nota"}</span>
+                      </div>
                     </div>
-
-                    <p>
-                      <strong>Ciudad:</strong> {block.apartment?.city || "No disponible"}
-                    </p>
-                    <p>
-                      <strong>Inicio:</strong> {formatDate(block.startDate)}
-                    </p>
-                    <p>
-                      <strong>Fin:</strong> {formatDate(block.endDate)}
-                    </p>
-                    <p>
-                      <strong>Nota:</strong> {block.note || "Sin nota"}
-                    </p>
-                  </div>
-
-                  <div className="admin-apartment-actions">
-                    <button
-                      type="button"
-                      className="admin-danger-button"
-                      disabled={deletingId === block._id}
-                      onClick={() => handleDelete(block._id)}
-                    >
-                      {deletingId === block._id ? "Eliminando..." : "Eliminar"}
-                    </button>
-                  </div>
-                </article>
-              ))}
+                    <div className="admin-apartment-actions">
+                      <button
+                        type="button"
+                        className="btn btn-danger btn-sm"
+                        disabled={deletingId === block._id}
+                        onClick={() => handleDelete(block._id)}
+                      >
+                        {deletingId === block._id ? "Eliminando..." : "Eliminar"}
+                      </button>
+                    </div>
+                  </article>
+                );
+              })}
             </div>
           )}
         </section>
       </div>
-    </section>
+    </>
   );
 }
 

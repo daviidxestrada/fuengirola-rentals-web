@@ -20,6 +20,9 @@ const buildApartmentPayload = (body = {}) => ({
   city: body.city?.trim(),
   price: Number(body.price),
   images: Array.isArray(body.images) ? body.images : [],
+  features: Array.isArray(body.features)
+    ? body.features.map((feature) => String(feature).trim()).filter(Boolean)
+    : [],
   bookingCalendarUrl: validateBookingCalendarUrl(body.bookingCalendarUrl),
 });
 
@@ -94,13 +97,14 @@ export const updateApartment = async (req, res, next) => {
     }
 
     const payload = buildApartmentPayload(req.body);
-    const { title, description, city, price, images, bookingCalendarUrl } = payload;
+    const { title, description, city, price, images, features, bookingCalendarUrl } = payload;
 
     apartment.title = title || apartment.title;
     apartment.description = description || apartment.description;
     apartment.city = city || apartment.city;
     apartment.price = price || apartment.price;
     apartment.images = images;
+    apartment.features = features;
     apartment.bookingCalendarUrl = bookingCalendarUrl;
 
     const updatedApartment = await apartment.save();
