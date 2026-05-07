@@ -1,0 +1,523 @@
+{
+  "info": {
+    "_postman_id": "4fb8f8f1-0c3f-4e8f-9f89-bf84cc4f5c7d",
+    "name": "PFM Direct Booking API",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "http://localhost:5000/api"
+    },
+    {
+      "key": "token",
+      "value": ""
+    },
+    {
+      "key": "apartmentId",
+      "value": ""
+    },
+    {
+      "key": "reservationId",
+      "value": ""
+    },
+    {
+      "key": "blockId",
+      "value": ""
+    }
+  ],
+  "item": [
+    {
+      "name": "Auth",
+      "item": [
+        {
+          "name": "Register",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Usuario Demo\",\n  \"email\": \"usuario@demo.com\",\n  \"password\": \"ClaveSegura123\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/auth/register",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "auth",
+                "register"
+              ]
+            },
+            "description": "Registra un nuevo usuario con rol user."
+          }
+        },
+        {
+          "name": "Login",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"admin@demo.com\",\n  \"password\": \"ClaveSegura123\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/auth/login",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "auth",
+                "login"
+              ]
+            },
+            "description": "Autentica un usuario y devuelve token JWT."
+          }
+        },
+        {
+          "name": "Me",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/auth/me",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "auth",
+                "me"
+              ]
+            },
+            "description": "Devuelve el usuario autenticado."
+          }
+        }
+      ]
+    },
+    {
+      "name": "Apartments",
+      "item": [
+        {
+          "name": "Get all apartments",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/apartments",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "apartments"
+              ]
+            },
+            "description": "Lista todos los apartamentos."
+          }
+        },
+        {
+          "name": "Get apartment by id",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/apartments/{{apartmentId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "apartments",
+                "{{apartmentId}}"
+              ]
+            },
+            "description": "Obtiene el detalle de un apartamento."
+          }
+        },
+        {
+          "name": "Create apartment",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"title\": \"Apartamento en Malaga centro\",\n  \"description\": \"Apartamento luminoso con balcon y cocina equipada.\",\n  \"city\": \"Malaga\",\n  \"price\": 120,\n  \"images\": []\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/apartments",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "apartments"
+              ]
+            },
+            "description": "Crea un apartamento. Requiere admin."
+          }
+        },
+        {
+          "name": "Update apartment",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"title\": \"Apartamento actualizado\",\n  \"description\": \"Descripcion actualizada\",\n  \"city\": \"Malaga\",\n  \"price\": 135,\n  \"images\": []\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/apartments/{{apartmentId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "apartments",
+                "{{apartmentId}}"
+              ]
+            },
+            "description": "Actualiza un apartamento. Requiere admin."
+          }
+        },
+        {
+          "name": "Delete apartment",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/apartments/{{apartmentId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "apartments",
+                "{{apartmentId}}"
+              ]
+            },
+            "description": "Elimina un apartamento. Requiere admin."
+          }
+        }
+      ]
+    },
+    {
+      "name": "Reservations",
+      "item": [
+        {
+          "name": "Get apartment availability",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/reservations/availability/{{apartmentId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "reservations",
+                "availability",
+                "{{apartmentId}}"
+              ]
+            },
+            "description": "Devuelve reservas activas y bloqueos manuales del apartamento."
+          }
+        },
+        {
+          "name": "Create reservation",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"apartment\": \"{{apartmentId}}\",\n  \"startDate\": \"2026-06-10\",\n  \"endDate\": \"2026-06-14\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/reservations",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "reservations"
+              ]
+            },
+            "description": "Crea una reserva pendiente. Requiere usuario autenticado."
+          }
+        },
+        {
+          "name": "Get my reservations",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/reservations/mine",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "reservations",
+                "mine"
+              ]
+            },
+            "description": "Lista las reservas del usuario autenticado."
+          }
+        },
+        {
+          "name": "Get all reservations",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/reservations",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "reservations"
+              ]
+            },
+            "description": "Lista todas las reservas. Requiere admin."
+          }
+        },
+        {
+          "name": "Get reservation by id",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/reservations/{{reservationId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "reservations",
+                "{{reservationId}}"
+              ]
+            },
+            "description": "Obtiene una reserva concreta. Requiere admin."
+          }
+        },
+        {
+          "name": "Approve reservation",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"status\": \"approved\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/reservations/{{reservationId}}/status",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "reservations",
+                "{{reservationId}}",
+                "status"
+              ]
+            },
+            "description": "Aprueba una reserva. Requiere admin."
+          }
+        },
+        {
+          "name": "Reject reservation",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"status\": \"rejected\",\n  \"rejectionReason\": \"Las fechas estan reservadas para mantenimiento interno.\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/reservations/{{reservationId}}/status",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "reservations",
+                "{{reservationId}}",
+                "status"
+              ]
+            },
+            "description": "Deniega una reserva. Requiere admin."
+          }
+        },
+        {
+          "name": "Delete reservation",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/reservations/{{reservationId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "reservations",
+                "{{reservationId}}"
+              ]
+            },
+            "description": "Elimina una reserva. Requiere admin."
+          }
+        }
+      ]
+    },
+    {
+      "name": "Blocks",
+      "item": [
+        {
+          "name": "Get blocks",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/blocks",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "blocks"
+              ]
+            },
+            "description": "Lista todos los bloqueos manuales. Requiere admin."
+          }
+        },
+        {
+          "name": "Create block",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"apartment\": \"{{apartmentId}}\",\n  \"startDate\": \"2026-07-01\",\n  \"endDate\": \"2026-07-05\",\n  \"note\": \"Mantenimiento anual\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/blocks",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "blocks"
+              ]
+            },
+            "description": "Crea un bloqueo manual de fechas. Requiere admin."
+          }
+        },
+        {
+          "name": "Delete block",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/blocks/{{blockId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "blocks",
+                "{{blockId}}"
+              ]
+            },
+            "description": "Elimina un bloqueo manual. Requiere admin."
+          }
+        }
+      ]
+    }
+  ]
+}
